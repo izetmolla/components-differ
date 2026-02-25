@@ -36,11 +36,9 @@ function addFile(
   relativeFilePath: string,
   content: string,
 ): void {
-  if (!isBuiltinComponent(config, relativeFilePath)) {
-    output.files.push(
-      parseFilePath(inSrcDir, config, `./${relativeFilePath}`, content),
-    );
-  }
+  output.files.push(
+    parseFilePath(inSrcDir, config, `./${relativeFilePath}`, content),
+  );
 }
 
 function addDependencies(
