@@ -12,8 +12,7 @@ You can use it in two ways:
 From the `differ` folder:
 
 ```bash
-pnpm install
-pnpm build
+npm install -g components-differ
 ```
 
 After building, you can run the CLI with `node` or via the `components-differ` bin (if linked/installed).
