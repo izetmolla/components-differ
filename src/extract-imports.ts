@@ -34,8 +34,16 @@ function specifierToPackageName(specifier: string): string | null {
 const RE_IMPORT =
   /(?:import\s+(?:(?:\{[^}]*\}|\*\s+as\s+\w+|\w+)\s+from\s+)?|import\s*)['"]([^'"]+)['"]|require\s*\(\s*['"]([^'"]+)['"]\s*\)|import\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
 
+/** Matches re-exports: export { ... } from '...', export * from '...', export Name from '...' */
+const RE_EXPORT_FROM =
+  /export\s+(?:\{[^}]*\}|\*|\w+)\s+from\s+['"]([^'"]+)['"]/g;
+
+/** Matches type-only re-exports: export type { ... } from '...', export type * from '...' */
+const RE_EXPORT_TYPE_FROM =
+  /export\s+type\s+(?:\{[^}]*\}|\*)\s+from\s+['"]([^'"]+)['"]/g;
+
 /**
- * Collect all package names that are imported or required in the given file content.
+ * Collect all package names that are imported, required, or re-exported in the given file content.
  */
 function extractFromContent(content: string): Set<string> {
   const packages = new Set<string>();
@@ -43,6 +51,18 @@ function extractFromContent(content: string): Set<string> {
   RE_IMPORT.lastIndex = 0;
   while ((m = RE_IMPORT.exec(content)) !== null) {
     const specifier = (m[1] ?? m[2] ?? m[3]) ?? "";
+    const pkg = specifierToPackageName(specifier);
+    if (pkg) packages.add(pkg);
+  }
+  RE_EXPORT_FROM.lastIndex = 0;
+  while ((m = RE_EXPORT_FROM.exec(content)) !== null) {
+    const specifier = m[1] ?? "";
+    const pkg = specifierToPackageName(specifier);
+    if (pkg) packages.add(pkg);
+  }
+  RE_EXPORT_TYPE_FROM.lastIndex = 0;
+  while ((m = RE_EXPORT_TYPE_FROM.exec(content)) !== null) {
+    const specifier = m[1] ?? "";
     const pkg = specifierToPackageName(specifier);
     if (pkg) packages.add(pkg);
   }
@@ -72,8 +92,9 @@ export function isPathSpecifier(specifier: string): boolean {
 }
 
 /**
- * Extract all import/require specifiers that are project paths (relative or alias)
- * from file content. Used to pull in imported files into the registry.
+ * Extract all import/require and export-from specifiers that are project paths
+ * (relative or alias) from file content. Used to pull in imported and
+ * re-exported files into the registry.
  */
 export function extractPathSpecifiers(content: string): string[] {
   const out: string[] = [];
@@ -81,6 +102,16 @@ export function extractPathSpecifiers(content: string): string[] {
   RE_IMPORT.lastIndex = 0;
   while ((m = RE_IMPORT.exec(content)) !== null) {
     const specifier = (m[1] ?? m[2] ?? m[3]) ?? "";
+    if (isPathSpecifier(specifier)) out.push(specifier);
+  }
+  RE_EXPORT_FROM.lastIndex = 0;
+  while ((m = RE_EXPORT_FROM.exec(content)) !== null) {
+    const specifier = m[1] ?? "";
+    if (isPathSpecifier(specifier)) out.push(specifier);
+  }
+  RE_EXPORT_TYPE_FROM.lastIndex = 0;
+  while ((m = RE_EXPORT_TYPE_FROM.exec(content)) !== null) {
+    const specifier = m[1] ?? "";
     if (isPathSpecifier(specifier)) out.push(specifier);
   }
   return out;
