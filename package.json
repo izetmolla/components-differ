@@ -1,6 +1,6 @@
 {
   "name": "components-differ",
-  "version": "1.0.0",
+  "version": "1.2.2",
   "description": "CLI to generate shadcn registry items from git diffs",
   "license": "ISC",
   "type": "module",
@@ -9,7 +9,8 @@
     "components-differ": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "release": "npm run build && node dist/release.js"
   },
   "dependencies": {
     "commander": "13.1.0",
